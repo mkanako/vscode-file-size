@@ -5,6 +5,9 @@ import {
   StatusBarItem,
 } from 'vscode'
 import * as fs from 'fs'
+import LRUCache from './LRUCache'
+
+const cache = new LRUCache()
 
 const sizeConvert = (size: number): string => {
   if (size >= 1048576) return `${Math.floor(size / 10485.76) / 100} MB`
@@ -12,10 +15,19 @@ const sizeConvert = (size: number): string => {
   else return `${size} B`
 }
 
-function update (bar: StatusBarItem): void {
+function update (bar: StatusBarItem, useCache = false): void {
   const editor = window.activeTextEditor
   if (editor && !editor.document.isUntitled && editor.document.uri.scheme === 'file') {
-    bar.text = sizeConvert(fs.statSync(editor.document.fileName).size)
+    const path = editor.document.fileName
+    let text
+    if (useCache) {
+      text = cache.get(path)
+    }
+    if (!text) {
+      text = sizeConvert(fs.statSync(path).size)
+      cache.set(path, text)
+    }
+    bar.text = text
   } else {
     bar.text = ''
   }
@@ -26,5 +38,8 @@ export function activate (): void {
   update(bar)
   bar.show()
   workspace.onDidSaveTextDocument(() => update(bar))
-  window.onDidChangeActiveTextEditor(() => update(bar))
+  window.onDidChangeActiveTextEditor(() => update(bar, true))
+}
+
+export function deactivate (): void {
 }
