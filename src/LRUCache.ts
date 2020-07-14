@@ -2,24 +2,29 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 class Node<T> {
-  next: Node<T> | null = null
-  prev: Node<T> | null = null
+  next!: Node<T> | DummyNode<T>
+  prev!: Node<T> | DummyNode<T>
   key: string
-  value: T | undefined
-  constructor (key: string, value?: T) {
+  value: T
+  constructor (key: string, value: T) {
     this.key = key
     this.value = value
   }
 }
 
+class DummyNode<T> {
+  next: Node<T> | DummyNode<T> | null = null
+  prev: Node<T> | DummyNode<T> | null = null
+}
+
 class DoublyLinkedList<T> {
-  private head: Node<T>
-  private tail: Node<T>
+  private head: DummyNode<T>
+  private tail: DummyNode<T>
   private length = 0
 
   constructor () {
-    this.head = new Node('head')
-    this.tail = new Node('tail')
+    this.head = new DummyNode()
+    this.tail = new DummyNode()
     this.head.next = this.tail
     this.tail.prev = this.head
   }
@@ -29,28 +34,34 @@ class DoublyLinkedList<T> {
   }
 
   add (node: Node<T>): void {
-    node.next = this.head.next
-    node.prev = this.head
-    this.head.next!.prev = node
-    this.head.next = node
-    this.length++
+    if (this.head.next) {
+      node.next = this.head.next
+      node.prev = this.head
+      this.head.next.prev = node
+      this.head.next = node
+      this.length++
+    }
   }
 
   remove (node: Node<T>): void {
     const prev = node.prev
     const next = node.next
-    node.prev!.next = next
-    next!.prev = prev
+    node.prev.next = next
+    next.prev = prev
     this.length--
   }
 
   pop (): Node<T> | null {
-    if (this.tail.prev === this.head) return null
-    const last = this.tail.prev
-    if (last) {
+    if (this.tail.prev instanceof Node) {
+      const last = this.tail.prev
       this.remove(last)
+      return last
     }
-    return last
+    return null
+  }
+
+  getLast (): Node<T> | null {
+    return this.tail.prev instanceof Node ? this.tail.prev : null
   }
 }
 
