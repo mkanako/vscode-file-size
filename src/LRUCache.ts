@@ -1,5 +1,4 @@
 // https://github.com/isaacs/node-lru-cache
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 class Node<T> {
   next!: Node<T> | DummyNode<T>
