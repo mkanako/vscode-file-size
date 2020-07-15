@@ -64,28 +64,35 @@ class DoublyLinkedList<T> {
   }
 }
 
-export default class LRUCache<T> {
-  private map: Map<string, [Node<T>, number]>
-  private list: DoublyLinkedList<T>
+function time (): number {
+  return (new Date()).getTime()
+}
+
+export default class LRUCache<T = string> {
+  private map: Map<string, [Node<T>, Node<number>]>
+  private dataList: DoublyLinkedList<T>
+  private timestampList: DoublyLinkedList<number>
   private capacity: number
   private expire: number
 
   constructor (capacity = 20, expire = 10 * 60) {
     this.map = new Map()
-    this.list = new DoublyLinkedList()
+    this.dataList = new DoublyLinkedList()
+    this.timestampList = new DoublyLinkedList()
     this.capacity = capacity
     this.expire = expire * 1000
   }
 
   get (key: string): T | undefined {
-    if (this.map.has(key)) {
-      const result = this.map.get(key)!
-      if (result[1] + this.expire > (new Date()).getTime()) {
-        this.list.remove(result[0])
-        this.list.add(result[0])
+    const result = this.map.get(key)
+    if (result) {
+      if (result[1].value + this.expire >= time()) {
+        this.dataList.remove(result[0])
+        this.dataList.add(result[0])
         return result[0].value
       } else {
-        this.list.remove(result[0])
+        this.dataList.remove(result[0])
+        this.timestampList.remove(result[1])
         this.map.delete(key)
       }
     }
@@ -93,16 +100,37 @@ export default class LRUCache<T> {
   }
 
   set (key: string, value: T): void {
-    const node = new Node(key, value)
-    if (this.map.has(key)) {
-      this.list.remove(this.map.get(key)![0])
+    const dataNode = new Node(key, value)
+    const timestampNode = new Node(key, time())
+    const result = this.map.get(key)
+    if (result) {
+      this.dataList.remove(result[0])
+      this.timestampList.remove(result[1])
     } else {
-      if (this.list.size() >= this.capacity) {
-        const last = this.list.pop()
-        this.map.delete(last!.key)
+      if (this.dataList.size() >= this.capacity) {
+        const tLast = this.timestampList.getLast()
+        if (tLast && time() > tLast.value + this.expire) {
+          const result = this.map.get(tLast.key)
+          if (result) {
+            this.timestampList.pop()
+            this.dataList.remove(result[0])
+            this.map.delete(tLast.key)
+          }
+        } else {
+          const dLast = this.dataList.getLast()
+          if (dLast) {
+            const result = this.map.get(dLast.key)
+            if (result) {
+              this.dataList.pop()
+              this.timestampList.remove(result[1])
+              this.map.delete(dLast.key)
+            }
+          }
+        }
       }
     }
-    this.list.add(node)
-    this.map.set(key, [node, (new Date()).getTime()])
+    this.dataList.add(dataNode)
+    this.timestampList.add(timestampNode)
+    this.map.set(key, [dataNode, timestampNode])
   }
 }
