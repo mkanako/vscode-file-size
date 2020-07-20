@@ -38,6 +38,7 @@ export function activate (): void {
   update(bar)
   bar.show()
   workspace.onDidSaveTextDocument(() => update(bar))
+  workspace.onDidChangeTextDocument(() => update(bar))
   window.onDidChangeActiveTextEditor(() => update(bar, true))
 }
 
