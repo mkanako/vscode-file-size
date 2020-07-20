@@ -5,9 +5,9 @@ import {
   StatusBarItem,
 } from 'vscode'
 import * as fs from 'fs'
-import LRUCache from './LRUCache'
+import LRUCache from '@mkanako/lrucache'
 
-const cache = new LRUCache()
+const cache = new LRUCache<string>()
 
 const sizeConvert = (size: number): string => {
   if (size >= 1048576) return `${Math.floor(size / 10485.76) / 100} MB`
