@@ -18,7 +18,6 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
-    '@typescript-eslint/class-name-casing': 'warn',
     '@typescript-eslint/semi': 'off',
     '@typescript-eslint/no-empty-function': 'off',
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
